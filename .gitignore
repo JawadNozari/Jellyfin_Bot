@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+bun.lock
+
+# Environment variables
+.env
+
+# OS files
+.DS_Store
+
+# Build output
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Downloads directory
+downloads/ 
