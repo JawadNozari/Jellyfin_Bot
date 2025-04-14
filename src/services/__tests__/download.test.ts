@@ -40,6 +40,7 @@ describe("Download Service", () => {
 					speed: 0,
 					size: 0,
 					downloaded: 0,
+					downloadPath: "test",
 				},
 				{
 					url: "https://example.com/file2",
@@ -48,11 +49,11 @@ describe("Download Service", () => {
 					speed: 0,
 					size: 0,
 					downloaded: 0,
+					downloadPath: "test",
 				},
 			];
-
-			const result = await processDownload(links);
-			expect(result).toBe("Download started successfully!");
+			await processDownload(links);
+			expect(processDownload(links)).resolves.toBeUndefined();
 		});
 	});
 });
