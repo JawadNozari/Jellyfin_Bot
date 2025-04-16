@@ -4,6 +4,8 @@ bun.lock
 
 # Environment variables
 .env
+.env.Production
+.env.Dev
 
 # OS files
 .DS_Store

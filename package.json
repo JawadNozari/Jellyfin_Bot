@@ -3,8 +3,8 @@
 	"version": "1.0.0",
 	"type": "module",
 	"scripts": {
-		"start": "bun run src/index.ts",
-		"dev": "bun --watch run src/index.ts",
+		"start": "bun run --env-file=.env.Production src/index.ts",
+		"dev": "bun --watch run --env-file=.env.Dev src/index.ts",
 		"test": "bun test",
 		"test:watch": "bun test --watch",
 		"format": "biome format --write .",
