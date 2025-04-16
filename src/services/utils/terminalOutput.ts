@@ -41,9 +41,22 @@ const getProgressColor = (progress: number): string => {
 };
 
 const getSpeedColor = (speed: number): string => {
-	if (speed > 1024 * 1024) return COLORS.green; // MB/s
-	if (speed > 1024) return COLORS.cyan; // KB/s
-	return COLORS.yellow; // B/s
+	if (speed > 30 * 1024 * 1024) return COLORS.green; // > 30 MB/s
+	if (speed > 20 * 1024 * 1024) return COLORS.yellow; // > 20 MB/s
+	return COLORS.red; // <= 20 MB/s
+};
+
+const formatTime = (seconds: number): string => {
+	const minutes = Math.floor(seconds / 60);
+	const remainingSeconds = Math.floor(seconds % 60);
+	return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+};
+
+const calculateRemainingTime = (downloaded: number, total: number, speed: number): string => {
+	if (speed === 0 || total === 0) return '--:--';
+	const remainingBytes = total - downloaded;
+	const remainingSeconds = Math.ceil(remainingBytes / speed);
+	return formatTime(remainingSeconds);
 };
 
 // Format a single download entry
@@ -55,11 +68,16 @@ const formatDownloadEntry = (url: string, link: DownloadLink): string => {
 	// Truncate URL to fit in terminal
 	const truncatedUrl = url.length > 50 ? `${url.substring(0, 47)}...` : url;
 
+	const remainingTime =
+		link.status === 'downloading'
+			? `  |  ETA: ${formatTime(Math.ceil((link.size - link.downloaded) / link.speed))}`
+			: '';
+
 	return (
 		`${formatSeparator()}` +
 		`\n${COLORS.bold}${statusEmoji} ${getStatusDownload(link.status)}${COLORS.reset}` +
 		`\nURL: ${COLORS.gray}${truncatedUrl}${COLORS.reset}` +
-		`\n\n${link.progressBar || ''}  |  Speed: ${speedColor}${formatSpeed(link.speed)}${COLORS.reset}  |  Downloaded: ${progressColor}${formatSize(link.downloaded)}/${formatSize(link.size)}${COLORS.reset}`
+		`\n\n${link.progressBar || ''}  |  Speed: ${speedColor}${formatSpeed(link.speed)}${COLORS.reset}  |  Downloaded: ${progressColor}${formatSize(link.downloaded)}/${formatSize(link.size)}${COLORS.reset}${remainingTime}`
 	);
 };
 
