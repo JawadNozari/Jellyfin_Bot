@@ -1,5 +1,5 @@
-import type { Context, SessionFlavor } from "grammy";
-import type { DownloadLink } from "@/types/download";
+import type { Context } from 'grammy';
+import type { DownloadLink } from '@/types/download';
 
 export interface SessionData {
 	counter: number;
