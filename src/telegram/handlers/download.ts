@@ -133,17 +133,8 @@ export const handleDownloadLinks = async (ctx: MyContext, links: string[]) => {
 			}
 		}
 
-		// Update terminal output
-		const terminalDownloads = new Map<string, DownloadLink>();
-		for (const [userId, userData] of activeDownloads) {
-			for (const link of userData.links) {
-				terminalDownloads.set(link.url, link);
-			}
-		}
-		updateTerminalOutput(terminalDownloads);
-
-		// Check if all downloads are complete
-		if (allCompleted) {
+		// Clear interval if all downloads are complete
+		if (allCompleted && userDownloads.links.length === 0) {
 			clearInterval(progressInterval);
 			activeDownloads.delete(userId);
 			ctx.session = removeCompletedDownloads(ctx.session);
