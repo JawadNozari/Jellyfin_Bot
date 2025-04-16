@@ -22,4 +22,7 @@ npm-debug.log*
 downloads/
 
 # Biome
-.biome/ 
+.biome/
+
+# VSCode
+.vscode/ 
