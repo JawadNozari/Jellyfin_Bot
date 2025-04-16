@@ -1,5 +1,4 @@
 import { Bot } from "grammy";
-import { isAdmin } from "@/telegram/middleware/auth";
 import { logger } from "@/telegram/middleware/logger";
 import { mainKeyboard } from "@/telegram/keyboards/main";
 import {
