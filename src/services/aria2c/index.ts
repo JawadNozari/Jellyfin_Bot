@@ -19,23 +19,41 @@ export class Aria2Manager {
 	}
 
 	async addDownload(link: DownloadLink): Promise<string> {
-		await this.start();
-		const isRunning = await aria2.isRunning();
-		if (!isRunning) throw new Error('aria2c is not running!');
-		const result: string = await callAria2('aria2.addUri', [
-			[link.url],
-			{
-				dir: link.downloadPath,
-				'auto-file-renaming': false,
-				'check-integrity': true,
-				continue: true,
-			},
-		]);
+		// Try to ensure aria2c is running with multiple attempts
+		for (let attempts = 0; attempts < 3; attempts++) {
+			await this.start();
 
-		link.gid = result;
-		poller.start(result, link);
+			try {
+				const isRunning = await aria2.isRunning();
+				if (isRunning) {
+					// aria2c is confirmed running, proceed with download
+					const result: string = await callAria2('aria2.addUri', [
+						[link.url],
+						{
+							dir: link.downloadPath,
+							'auto-file-renaming': false,
+							'check-integrity': true,
+							continue: true,
+						},
+					]);
 
-		return result;
+					link.gid = result;
+					poller.start(result, link);
+
+					return result;
+				}
+
+				// If we get here, aria2c is not running yet
+				console.debug(`Aria2c not running, attempt ${attempts + 1}/3. Waiting before retry...`);
+				await new Promise((r) => setTimeout(r, 1000)); // Wait before retry
+			} catch (error) {
+				console.debug(`Error checking aria2c status (attempt ${attempts + 1}/3):`, error);
+				await new Promise((r) => setTimeout(r, 1000)); // Wait before retry
+			}
+		}
+
+		// If we get here after all attempts, throw error
+		throw new Error('aria2c is not running! Failed after multiple attempts.');
 	}
 
 	async getStatus(gid: string) {

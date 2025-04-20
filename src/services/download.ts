@@ -90,7 +90,7 @@ export async function processDownload(links: DownloadLink[]): Promise<void> {
 		for (const link of activeDownloads.values()) {
 			if (link.gid) {
 				const status = await aria2RPC.getStatus(link.gid);
-				console.log(status);
+				//console.log(status);
 			}
 
 			if (link.status !== 'completed' && link.status !== 'failed') {
