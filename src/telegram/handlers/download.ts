@@ -107,11 +107,20 @@ export const handleDownloadLinks = async (ctx: MyContext, links: string[]) => {
 					displayName = `${link.mediaInfo.show.title} S${link.mediaInfo.show.season}E${link.mediaInfo.show.episode}`;
 				}
 			}
-
+			const formatTime = (seconds: number): string => {
+				const minutes = Math.floor(seconds / 60);
+				const remainingSeconds = Math.floor(seconds % 60);
+				return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+			};
+			const remainingTime =
+				link.status === 'downloading'
+					? `ETA: ${formatTime(Math.ceil((link.size - link.downloaded) / link.speed))}`
+					: '';
 			const progressMessage =
 				`${link.status === 'completed' ? '✅ Download Completed:' : '📥 Downloading:'} ${displayName}\n` +
 				`\n${link.progressBar || ''}` +
 				`\n${link.status === 'downloading' ? `Speed: ${formatSpeed(link.speed)}` : ''}` +
+				`\n${link.status === 'completed' ? '' : remainingTime}` +
 				`\nSize: ${link.status === 'completed' ? formatSize(link.size) : `${formatSize(link.downloaded)} / ${formatSize(link.size)}`}`;
 
 			// Only update if the message has changed
