@@ -1,23 +1,24 @@
 {
 	"name": "jellefin-bot",
 	"version": "1.0.0",
-	"type": "module",
+	"description": "A bot for managing subtitles",
+	"main": "index.js",
 	"scripts": {
 		"start": "bun run --env-file=.env.Production src/index.ts",
 		"dev": "bun --watch run --env-file=.env.Dev src/index.ts",
-		"test": "bun test",
+		"test": "echo \"Error: no test specified\" && exit 1",
 		"test:watch": "bun test --watch",
 		"format": "biome format --write .",
 		"lint": "biome lint .",
 		"check": "biome check --apply ."
 	},
 	"dependencies": {
-		"grammy": "^1.21.1"
+		"axios": "^1.6.7",
+		"@types/node": "^20.11.19"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
 		"@types/jest": "^29.5.12",
-		"@types/node": "^20.11.19",
 		"bun-types": "latest",
 		"typescript": "^5.3.3"
 	}

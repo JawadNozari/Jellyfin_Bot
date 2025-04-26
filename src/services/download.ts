@@ -31,7 +31,9 @@ export function validateLinks(links: string[]): DownloadLink[] {
 				`${mediaInfo.movie.title}_${mediaInfo.movie.year}`,
 			);
 		} else if (mediaInfo.show) {
-			downloadPath = join(DOWNLOAD_DIR, 'Shows', mediaInfo.show.title, `S${mediaInfo.show.season}`);
+			// For shows, create a directory for the show and season
+			const season = mediaInfo.show.season.toString().padStart(2, '0');
+			downloadPath = join(DOWNLOAD_DIR, 'Shows', mediaInfo.show.title, `S${season}`);
 		}
 
 		// Ensure the directory exists
@@ -88,10 +90,10 @@ export async function processDownload(links: DownloadLink[]): Promise<void> {
 
 		// Update status of active downloads
 		for (const link of activeDownloads.values()) {
-			if (link.gid) {
-				const status = await aria2RPC.getStatus(link.gid);
-				//console.log(status);
-			}
+			// if (link.gid) {
+			// 	const status = await aria2RPC.getStatus(link.gid);
+			// 	//console.log(status);
+			// }
 
 			if (link.status !== 'completed' && link.status !== 'failed') {
 				allCompleted = false;
@@ -128,13 +130,19 @@ export function getDownloadStatus(): string {
 			} else if (mediaInfo.show) {
 				displayName = `${mediaInfo.show.title} S${mediaInfo.show.season}E${mediaInfo.show.episode}`;
 			}
-
+			const progress = Number.isNaN(link.progress)
+				? 'processing'
+				: `Progress: ${link.progress.toFixed(1)}%`;
+			const speed = Number.isNaN(link.speed) ? 'Calculating...' : `${formatSpeed(link.speed)}`;
+			const size = Number.isNaN(link.size)
+				? 'Calculating...'
+				: `${formatSize(link.downloaded)}/${formatSize(link.size)}`;
 			return (
 				`${displayName}:` +
 				`${link.progressBar || ''}` +
-				`\nProgress: ${link.progress.toFixed(1)}%` +
-				`\nSpeed: ${formatSpeed(link.speed)}` +
-				`\nSize: ${formatSize(link.downloaded)}/${formatSize(link.size)}`
+				`\n${progress}` +
+				`\nSpeed: ${speed}` +
+				`\nSize: ${size}`
 			);
 		})
 		.join('\n\n');

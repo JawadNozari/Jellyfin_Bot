@@ -1,5 +1,5 @@
 import type { DownloadLink } from '@/types/download';
-import { formatSpeed, formatSize } from './format';
+import { formatSpeed, formatSize, formatTime } from './format';
 // ANSI color codes
 const COLORS = {
 	reset: '\x1b[0m',
@@ -30,7 +30,7 @@ const formatSeparator = (): string => `${COLORS.gray}${'─'.repeat(80)}${COLORS
 const getStatusEmoji = (status: string): string =>
 	STATUS_EMOJIS[status as keyof typeof STATUS_EMOJIS] || STATUS_EMOJIS.pending;
 const getStatusDownload = (status: string): string =>
-	status === 'downloading' ? 'Downloading' : status;
+	status.charAt(0).toUpperCase() + status.slice(1);
 
 const getProgressColor = (progress: number): string => {
 	if (progress >= 100) return COLORS.green;
@@ -46,13 +46,7 @@ const getSpeedColor = (speed: number): string => {
 	return COLORS.red; // <= 20 MB/s
 };
 
-const formatTime = (seconds: number): string => {
-	const minutes = Math.floor(seconds / 60);
-	const remainingSeconds = Math.floor(seconds % 60);
-	return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-};
-
-const calculateRemainingTime = (downloaded: number, total: number, speed: number): string => {
+const calculateRemainingTime = (total: number, downloaded: number, speed: number): string => {
 	if (speed === 0 || total === 0) return '--:--';
 	const remainingBytes = total - downloaded;
 	const remainingSeconds = Math.ceil(remainingBytes / speed);
@@ -70,7 +64,7 @@ const formatDownloadEntry = (url: string, link: DownloadLink): string => {
 
 	const remainingTime =
 		link.status === 'downloading'
-			? `  |  ETA: ${formatTime(Math.ceil((link.size - link.downloaded) / link.speed))}`
+			? `  |  ETA: ${calculateRemainingTime(link.size, link.downloaded, link.speed)}`
 			: '';
 
 	return (

@@ -8,7 +8,6 @@ import {
 } from '@/telegram/session/manager';
 import { validateLinks, processDownload } from '@/services/download';
 import { formatSpeed, formatSize } from '@/services/utils/format';
-import { updateTerminalOutput } from '@/services/utils/terminalOutput';
 
 // Track active downloads and their progress messages
 const activeDownloads = new Map<
@@ -19,7 +18,7 @@ const activeDownloads = new Map<
 	}
 >();
 
-const UPDATE_INTERVAL = 3500; // Update every 3.5 seconds
+const UPDATE_INTERVAL = 8000; // Update every 3.5 seconds
 
 export const handleDownload = async (ctx: MyContext) => {
 	ctx.session = setWaitingForLink(ctx.session);
@@ -132,7 +131,8 @@ export const handleDownloadLinks = async (ctx: MyContext, links: string[]) => {
 				} catch (error) {
 					// Ignore "message not modified" errors
 					if (error instanceof Error && !error.message.includes('message is not modified')) {
-						console.error('Error updating progress message:', error);
+						// console.error('Error updating progress message:', error);
+						console.log('To many requests to telegram API, Limit reached');
 					}
 				}
 			}
