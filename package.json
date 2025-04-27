@@ -1,16 +1,22 @@
 {
-	"name": "jellefin-bot",
+	"name": "jellyfin-bot",
 	"version": "1.0.0",
+	"type": "module",
 	"description": "A bot for managing subtitles",
 	"main": "index.js",
+	"bin": {
+		"jellyfin-bot": "dist/JellyfinBot"
+	},
+
 	"scripts": {
 		"start": "bun run --env-file=.env.Production src/index.ts",
+		"compile": "bun build src/index.ts --env-file=.env.Production --compile --outfile=dist/JellyfinBot",
 		"dev": "bun --watch run --env-file=.env.Dev src/index.ts",
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"test:watch": "bun test --watch",
 		"format": "biome format --write .",
 		"lint": "biome lint .",
-		"check": "biome check --apply ."
+		"check": "biome check ."
 	},
 	"dependencies": {
 		"axios": "^1.6.7",

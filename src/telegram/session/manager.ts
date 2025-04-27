@@ -1,5 +1,4 @@
-import type { SessionData } from "@/telegram/types/bot";
-import type { DownloadLink } from "@/types/download";
+import type { DownloadLink, SessionData } from '@/types';
 
 export const initialSession = (): SessionData => ({
 	counter: 0,
@@ -24,12 +23,19 @@ export const addActiveDownloads = (
 	...session,
 	activeDownloads: [...session.activeDownloads, ...downloads],
 });
-
-export const removeCompletedDownloads = (
+// queue links that were sended after the command
+export const queueActiveDownloads = (
 	session: SessionData,
+	downloads: DownloadLink[],
 ): SessionData => ({
 	...session,
-	activeDownloads: session.activeDownloads.filter(
-		(download) => download.status !== "completed",
-	),
+	activeDownloads: [
+		...session.activeDownloads.filter((download) => download.status !== 'pending'),
+		...downloads,
+	],
+});
+
+export const removeCompletedDownloads = (session: SessionData): SessionData => ({
+	...session,
+	activeDownloads: session.activeDownloads.filter((download) => download.status !== 'completed'),
 });

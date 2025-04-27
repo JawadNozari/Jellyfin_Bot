@@ -1,24 +1,35 @@
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { extractMediaInfo } from './utils/extractMediaInfo';
-import { formatSpeed, formatSize } from './utils/format';
-import type { DownloadLink } from '@/types/download';
-// import { aria2RPC } from './aria2RPC';
-import { aria2RPC } from './aria2c';
-const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR || './downloads';
-const UPDATE_INTERVAL = 1000; // Update every second
-const MAX_CONCURRENT_DOWNLOADS = 4; // Maximum number of concurrent downloads
+import type { DownloadLink } from '@/types';
+import { extractMediaInfo } from '@/utils/extractMediaInfo';
+import { Aria2Manager } from './aria2c';
+import { Aria2Client } from './aria2c/client';
+import { Aria2Polling } from './aria2c/polling';
+import { Aria2RPCProcess } from './aria2c/rpc';
 
-// Track active downloads
-const activeDownloads = new Map<string, DownloadLink>();
+const PORT = Number(process.env.RPC_PORT);
+if (!PORT) {
+	throw new Error('RPC_PORT is not defined. Please set it in your environment variables.');
+}
+const SECRET = process.env.RPC_SECRET;
+if (!SECRET) {
+	throw new Error('RPC_SECRET is not defined. Please set it in your environment variables.');
+}
+const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR || './downloads';
+if (!DOWNLOAD_DIR) {
+	throw new Error('DOWNLOAD_DIR is not defined. Please set it in your environment variables.');
+}
+const UPDATE_INTERVAL = 1000;
+const MAX_CONCURRENT_DOWNLOADS = 4;
 const pendingDownloads: DownloadLink[] = [];
+const activeDownloads = new Map<string, DownloadLink>();
+
+const aria2 = new Aria2Client(PORT, SECRET);
+const rpcProcess = new Aria2RPCProcess();
+const poller = new Aria2Polling(aria2);
+const manager = new Aria2Manager(aria2, rpcProcess, poller);
 
 export function validateLinks(links: string[]): DownloadLink[] {
-	// Ensure downloads directory exists
-	if (!existsSync(DOWNLOAD_DIR)) {
-		//console.log('Creating downloads directory...');
-		async () => await mkdirSync(DOWNLOAD_DIR, { recursive: true });
-	}
 	return links.map((url) => {
 		const fileName = url.split('/').pop() || 'unknown';
 		const mediaInfo = extractMediaInfo(fileName);
@@ -31,12 +42,9 @@ export function validateLinks(links: string[]): DownloadLink[] {
 				`${mediaInfo.movie.title}_${mediaInfo.movie.year}`,
 			);
 		} else if (mediaInfo.show) {
-			// For shows, create a directory for the show and season
 			const season = mediaInfo.show.season.toString().padStart(2, '0');
 			downloadPath = join(DOWNLOAD_DIR, 'Shows', mediaInfo.show.title, `S${season}`);
 		}
-
-		// Ensure the directory exists
 		if (!existsSync(downloadPath)) {
 			mkdirSync(downloadPath, { recursive: true });
 		}
@@ -46,6 +54,8 @@ export function validateLinks(links: string[]): DownloadLink[] {
 			status: 'pending',
 			progress: 0,
 			progressBar: '',
+			ETA: '',
+			remaining: 0,
 			speed: 0,
 			size: 0,
 			downloaded: 0,
@@ -71,7 +81,7 @@ async function startNextDownload(): Promise<void> {
 
 	try {
 		link.status = 'downloading';
-		const gid = await aria2RPC.addDownload(link);
+		const gid = await manager.addDownload(link);
 		link.gid = gid;
 		activeDownloads.set(link.url, link);
 	} catch (error) {
@@ -81,71 +91,36 @@ async function startNextDownload(): Promise<void> {
 }
 
 export async function processDownload(links: DownloadLink[]): Promise<void> {
-	// Add all links to pending downloads
 	pendingDownloads.push(...links);
-
-	// Set up progress update interval
 	const progressInterval = setInterval(async () => {
 		let allCompleted = true;
 
-		// Update status of active downloads
 		for (const link of activeDownloads.values()) {
-			// if (link.gid) {
-			// 	const status = await aria2RPC.getStatus(link.gid);
-			// 	//console.log(status);
-			// }
-
 			if (link.status !== 'completed' && link.status !== 'failed') {
 				allCompleted = false;
-			} else if (link.status === 'completed' || link.status === 'failed') {
-				// Try to start next download when one completes or fails
+			}
+			if (link.status === 'completed' || link.status === 'failed') {
 				await startNextDownload();
 			}
 		}
 
 		// Try to start more downloads if we have capacity
 		await startNextDownload();
-
-		// Clear interval if all downloads are complete
 		if (allCompleted && pendingDownloads.length === 0) {
 			clearInterval(progressInterval);
 		}
 	}, UPDATE_INTERVAL);
 }
 
-export function getDownloadStatus(): string {
-	const active = getActiveDownloads();
-	if (active.length === 0) {
-		return 'No active downloads';
+export async function getDownloadStatus(gid: string): Promise<DownloadLink | undefined> {
+	const getStatus = await manager.getStatus(gid);
+	if (getStatus && 'url' in getStatus) {
+		const { url } = getStatus;
+		if (activeDownloads.has(url as string)) {
+			return activeDownloads.get(url as string);
+		}
 	}
-
-	return active
-		.map((link) => {
-			const fileName = link.url.split('/').pop() || 'unknown';
-			const mediaInfo = extractMediaInfo(fileName);
-			let displayName = fileName;
-
-			if (mediaInfo.movie) {
-				displayName = `${mediaInfo.movie.title} (${mediaInfo.movie.year})`;
-			} else if (mediaInfo.show) {
-				displayName = `${mediaInfo.show.title} S${mediaInfo.show.season}E${mediaInfo.show.episode}`;
-			}
-			const progress = Number.isNaN(link.progress)
-				? 'processing'
-				: `Progress: ${link.progress.toFixed(1)}%`;
-			const speed = Number.isNaN(link.speed) ? 'Calculating...' : `${formatSpeed(link.speed)}`;
-			const size = Number.isNaN(link.size)
-				? 'Calculating...'
-				: `${formatSize(link.downloaded)}/${formatSize(link.size)}`;
-			return (
-				`${displayName}:` +
-				`${link.progressBar || ''}` +
-				`\n${progress}` +
-				`\nSpeed: ${speed}` +
-				`\nSize: ${size}`
-			);
-		})
-		.join('\n\n');
+	return undefined;
 }
 
 export function getActiveDownloads(): DownloadLink[] {

@@ -6,13 +6,13 @@ export function parseSpeed(speedStr: string): number {
 	const numValue = Number.parseFloat(value);
 
 	switch (unit) {
-		case "B":
+		case 'B':
 			return numValue;
-		case "KiB":
+		case 'KiB':
 			return numValue * 1024;
-		case "MiB":
+		case 'MiB':
 			return numValue * 1024 * 1024;
-		case "GiB":
+		case 'GiB':
 			return numValue * 1024 * 1024 * 1024;
 		default:
 			return 0;
@@ -27,13 +27,13 @@ export function parseSize(sizeStr: string): number {
 	const numValue = Number.parseFloat(value);
 
 	switch (unit) {
-		case "B":
+		case 'B':
 			return numValue;
-		case "KiB":
+		case 'KiB':
 			return numValue * 1024;
-		case "MiB":
+		case 'MiB':
 			return numValue * 1024 * 1024;
-		case "GiB":
+		case 'GiB':
 			return numValue * 1024 * 1024 * 1024;
 		default:
 			return 0;

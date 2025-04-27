@@ -1,21 +1,24 @@
-import type { DownloadLink } from '@/types/download';
-import type { Aria2Status } from './types';
-import { callAria2 } from './client';
-import { createProgressBar } from '../utils/progressbar';
-import { parseSpeed, parseSize } from '../utils/parse';
-import { updateTerminalOutput } from '../utils/terminalOutput';
+import type { DownloadLink } from '@/types';
+import { parseSize, parseSpeed } from '@/utils/parse';
+import { createProgressBar } from '@/utils/progressbar';
+import { Terminaloutput } from '@/utils/terminalOutput';
+import type { Aria2Client } from './client';
 
 export class Aria2Polling {
 	private intervals = new Map<string, ReturnType<typeof setInterval>>();
 	private static activeDownloads = new Map<string, DownloadLink>();
-
+	private aria2call: Aria2Client;
+	private terminalOutput: Terminaloutput;
+	constructor(aria2call: Aria2Client) {
+		this.aria2call = aria2call;
+		this.terminalOutput = new Terminaloutput(Aria2Polling.activeDownloads);
+	}
 	start(gid: string, link: DownloadLink): void {
 		this.stop(gid);
 		Aria2Polling.activeDownloads.set(link.url, link);
-
 		const interval = setInterval(async () => {
 			try {
-				const response = await callAria2<Aria2Status>('aria2.tellStatus', [gid]);
+				const response = await this.aria2call.tellStatus(gid);
 
 				if (!response || typeof response !== 'object') {
 					throw new Error('Invalid response from aria2c');
@@ -48,15 +51,15 @@ export class Aria2Polling {
 				}
 
 				link.progressBar = createProgressBar(link.progress);
-				updateTerminalOutput(Aria2Polling.activeDownloads);
+				this.terminalOutput.update();
 			} catch (err) {
 				console.error(`Polling failed for ${link.url}`, err);
 				link.status = 'failed';
 				this.stop(gid);
 				Aria2Polling.activeDownloads.delete(link.url);
-				updateTerminalOutput(Aria2Polling.activeDownloads);
+				this.terminalOutput.update();
 			}
-		}, 1000); // Poll every second for terminal updates
+		}, 250);
 
 		this.intervals.set(gid, interval);
 	}

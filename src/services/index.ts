@@ -1,3 +1,3 @@
-export * from "./download";
-export * from "./storage";
-export * from "./jellyfin";
+export * from './storage/storage';
+export * from './Jellyfin/jellyfin';
+export * from './download/downloader';

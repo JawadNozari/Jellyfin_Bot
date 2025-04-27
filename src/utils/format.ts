@@ -24,8 +24,32 @@ export function formatSize(bytes: number): string {
 	return `${bytes} B`;
 }
 
-export function formatTime(seconds: number): string {
+function formatEta(seconds: number | null): string {
+	if (seconds === null) return '∞'; // Infinite or unknown
+
 	const minutes = Math.floor(seconds / 60);
-	const remainingSeconds = Math.floor(seconds % 60);
-	return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+	const hours = Math.floor(minutes / 60);
+	const remainingMinutes = minutes % 60;
+	const remainingSeconds = seconds % 60;
+
+	if (hours > 0) {
+		return `${hours}h ${remainingMinutes}m`;
+	}
+	if (minutes > 0) {
+		return `${minutes}m ${remainingSeconds}s`;
+	}
+	return `${remainingSeconds}s`;
+}
+
+export function calculateEta(
+	totalLength: number,
+	completedLength: number,
+	downloadSpeed: number,
+): string | null {
+	if (downloadSpeed <= 0) return null; // paused or stalled
+
+	const remaining = totalLength - completedLength;
+	const etaSeconds = remaining / downloadSpeed;
+
+	return formatEta(Math.ceil(etaSeconds));
 }

@@ -1,13 +1,4 @@
-import { sessionMiddleware } from "./middleware";
-import {
-	initialSession,
-	resetWaitingForLink,
-	setWaitingForLink,
-} from "./manager";
+import { initialSession, resetWaitingForLink, setWaitingForLink } from './manager';
+import { sessionMiddleware } from './middleware';
 
-export {
-	sessionMiddleware,
-	initialSession,
-	resetWaitingForLink,
-	setWaitingForLink,
-};
+export { sessionMiddleware, initialSession, resetWaitingForLink, setWaitingForLink };

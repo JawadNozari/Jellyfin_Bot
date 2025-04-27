@@ -1,5 +1,5 @@
-import type { MyContext } from "@/telegram/types/bot";
-import { getStorageInfo } from "@/services/storage";
+import { getStorageInfo } from '@/services/storage/storage';
+import type { MyContext } from '@/types';
 
 export const handleStorage = async (ctx: MyContext) => {
 	const storageInfo = await getStorageInfo();

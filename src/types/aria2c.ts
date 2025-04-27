@@ -14,3 +14,9 @@ export interface Aria2Response {
 		message: string;
 	};
 }
+
+export interface DownloadTask {
+	uris: string[];
+	options?: Record<string, unknown>;
+	priority?: 'high' | 'normal' | 'low';
+}

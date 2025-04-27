@@ -1,13 +1,12 @@
-import type { MyContext } from '@/telegram/types/bot';
-import type { DownloadLink } from '@/types/download';
+import { processDownload, validateLinks } from '@/services';
 import {
-	setWaitingForLink,
 	addActiveDownloads,
-	resetWaitingForLink,
 	removeCompletedDownloads,
+	resetWaitingForLink,
+	setWaitingForLink,
 } from '@/telegram/session/manager';
-import { validateLinks, processDownload } from '@/services/download';
-import { formatSpeed, formatSize } from '@/services/utils/format';
+import type { DownloadLink, MyContext } from '@/types';
+import { calculateEta, formatSize, formatSpeed } from '@/utils/format';
 
 // Track active downloads and their progress messages
 const activeDownloads = new Map<
@@ -22,9 +21,7 @@ const UPDATE_INTERVAL = 8000; // Update every 3.5 seconds
 
 export const handleDownload = async (ctx: MyContext) => {
 	ctx.session = setWaitingForLink(ctx.session);
-	await ctx.reply('Please send the download link(s) in reply to this message.', {
-		reply_markup: { force_reply: true },
-	});
+	await ctx.reply('Please send the download link(s)');
 };
 
 export const handleDownloadLinks = async (ctx: MyContext, links: string[]) => {
@@ -32,33 +29,36 @@ export const handleDownloadLinks = async (ctx: MyContext, links: string[]) => {
 		await ctx.reply('Error: Could not identify user or chat');
 		return;
 	}
-
 	const userId = ctx.from.id.toString();
 	const chatId = ctx.chat.id;
 
-	// Reset waiting state
-	ctx.session = resetWaitingForLink(ctx.session);
-
+	const userDownloads = activeDownloads.get(userId);
 	// Validate links
 	const validatedLinks = validateLinks(links);
 
-	// Add to active downloads
+	// If there are already active downloads, merge them with the new ones
+	if (userDownloads) {
+		userDownloads.links.push(...validatedLinks);
+		await ctx.reply(
+			`You are already downloading files. Added ${validatedLinks.length} more file(s) to the queue.`,
+		);
+	} else {
+		// If no active downloads, start from scratch
+		await ctx.reply(`Starting download of ${validatedLinks.length} file(s)...`);
+	}
+
+	// Add to active downloads (Merge new links with existing ones if there are any)
 	ctx.session = addActiveDownloads(ctx.session, validatedLinks);
 
-	// Send initial response
-	await ctx.reply(`Starting download of ${validatedLinks.length} file(s)...`);
-
-	// Create a map to store message IDs for each download
+	// Send initial progress messages for new downloads
 	const messages = new Map<string, { messageId: number; lastProgress: string }>();
-
-	// Send initial progress messages for each file
 	for (const link of validatedLinks) {
 		let displayName = link.url.split('/').pop() || 'unknown';
 		if (link.mediaInfo) {
 			if (link.mediaInfo.movie) {
 				displayName = `${link.mediaInfo.movie.title} (${link.mediaInfo.movie.year})`;
 			} else if (link.mediaInfo.show) {
-				displayName = `${link.mediaInfo.show.title} S${link.mediaInfo.show.season} E${link.mediaInfo.show.episode}`;
+				displayName = `${link.mediaInfo.show.title} S${link.mediaInfo.show.season}E${link.mediaInfo.show.episode}`;
 			}
 		}
 
@@ -71,11 +71,17 @@ export const handleDownloadLinks = async (ctx: MyContext, links: string[]) => {
 		});
 	}
 
-	// Store the messages and links for this user
-	activeDownloads.set(userId, {
-		messages,
-		links: validatedLinks,
-	});
+	// Store the updated messages and links for this user
+	if (userDownloads) {
+		// Merge old messages with new messages
+		userDownloads.messages = new Map([...userDownloads.messages, ...messages]);
+	} else {
+		// Store new user download data
+		activeDownloads.set(userId, {
+			messages,
+			links: validatedLinks,
+		});
+	}
 
 	// Start download process in the background
 	processDownload(validatedLinks).catch(async (error) => {
@@ -106,14 +112,10 @@ export const handleDownloadLinks = async (ctx: MyContext, links: string[]) => {
 					displayName = `${link.mediaInfo.show.title} S${link.mediaInfo.show.season}E${link.mediaInfo.show.episode}`;
 				}
 			}
-			const formatTime = (seconds: number): string => {
-				const minutes = Math.floor(seconds / 60);
-				const remainingSeconds = Math.floor(seconds % 60);
-				return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-			};
+
 			const remainingTime =
 				link.status === 'downloading'
-					? `ETA: ${formatTime(Math.ceil((link.size - link.downloaded) / link.speed))}`
+					? `ETA: ${calculateEta(link.size, link.downloaded, link.speed)}`
 					: '';
 			const progressMessage =
 				`${link.status === 'completed' ? '✅ Download Completed:' : '📥 Downloading:'} ${displayName}\n` +
@@ -131,8 +133,7 @@ export const handleDownloadLinks = async (ctx: MyContext, links: string[]) => {
 				} catch (error) {
 					// Ignore "message not modified" errors
 					if (error instanceof Error && !error.message.includes('message is not modified')) {
-						// console.error('Error updating progress message:', error);
-						console.log('To many requests to telegram API, Limit reached');
+						console.log('Too many requests to Telegram API, Limit reached');
 					}
 				}
 			}
@@ -147,6 +148,8 @@ export const handleDownloadLinks = async (ctx: MyContext, links: string[]) => {
 			clearInterval(progressInterval);
 			activeDownloads.delete(userId);
 			ctx.session = removeCompletedDownloads(ctx.session);
+			// Reset waiting state
+			ctx.session = resetWaitingForLink(ctx.session);
 			await ctx.reply('All downloads completed successfully! 🎉');
 		}
 	}, UPDATE_INTERVAL);

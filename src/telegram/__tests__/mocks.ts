@@ -1,9 +1,7 @@
-import { jest } from "bun:test";
-import type { MyContext } from "../types/bot";
+import { jest } from 'bun:test';
+import type { MyContext } from '../types/bot';
 
-export const createMockContext = (
-	overrides: Partial<MyContext> = {},
-): MyContext => {
+export const createMockContext = (overrides: Partial<MyContext> = {}): MyContext => {
 	return {
 		session: {
 			counter: 0,
