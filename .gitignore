@@ -26,3 +26,4 @@ downloads/
 
 # VSCode
 .vscode/ 
+*.bun-build
