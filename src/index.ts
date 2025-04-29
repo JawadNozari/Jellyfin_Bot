@@ -6,12 +6,16 @@ import {
 } from '@/telegram/handlers';
 import { mainKeyboard } from '@/telegram/keyboards/main';
 import { logger } from '@/telegram/middleware/logger';
-import { sessionMiddleware } from '@/telegram/session';
+
 import { Bot } from 'grammy';
 import type { MyContext } from './types';
+import { sessionMiddleware, ContextHelpersMiddleware } from './telegram/session';
 
 const bot = new Bot<MyContext>(process.env.BOT_TOKEN || '');
+
 bot.use(sessionMiddleware);
+bot.use(ContextHelpersMiddleware);
+
 bot.use(logger);
 
 bot.command('start', async (ctx) => {

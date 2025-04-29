@@ -1,10 +1,4 @@
 import { processDownload, validateLinks } from '@/services';
-import {
-	addActiveDownloads,
-	removeCompletedDownloads,
-	resetWaitingForLink,
-	setWaitingForLink,
-} from '@/telegram/session/manager';
 import type { DownloadLink, MyContext } from '@/types';
 import { calculateEta, formatSize, formatSpeed } from '@/utils/format';
 
@@ -20,7 +14,7 @@ const activeDownloads = new Map<
 const UPDATE_INTERVAL = 8000; // Update every 3.5 seconds
 
 export const handleDownload = async (ctx: MyContext) => {
-	ctx.session = setWaitingForLink(ctx.session);
+	ctx.setWaitingForLink();
 	await ctx.reply('Please send the download link(s)');
 };
 
@@ -48,7 +42,7 @@ export const handleDownloadLinks = async (ctx: MyContext, links: string[]) => {
 	}
 
 	// Add to active downloads (Merge new links with existing ones if there are any)
-	ctx.session = addActiveDownloads(ctx.session, validatedLinks);
+	ctx.addDownloads(validatedLinks);
 
 	// Send initial progress messages for new downloads
 	const messages = new Map<string, { messageId: number; lastProgress: string }>();
@@ -63,7 +57,11 @@ export const handleDownloadLinks = async (ctx: MyContext, links: string[]) => {
 		}
 
 		const initialMessage = await ctx.reply(
-			`📥 Downloading: ${displayName}\n\nStatus: Pending\nProgress: 0%\nSpeed: 0 B/s\nSize: 0 B / 0 B`,
+			`📥 Downloading: ${displayName}\n\n` +
+				`${link.progressBar}\n` +
+				`Speed: ${formatSpeed(link.speed)}\n` +
+				`ETA: ${link.ETA}\n` +
+				`Size: ${formatSize(link.size)}\n`,
 		);
 		messages.set(link.url, {
 			messageId: initialMessage.message_id,
@@ -98,7 +96,6 @@ export const handleDownloadLinks = async (ctx: MyContext, links: string[]) => {
 		}
 
 		let allCompleted = true;
-
 		// Update each download's progress message
 		for (const link of userDownloads.links) {
 			const messageInfo = userDownloads.messages.get(link.url);
@@ -113,15 +110,11 @@ export const handleDownloadLinks = async (ctx: MyContext, links: string[]) => {
 				}
 			}
 
-			const remainingTime =
-				link.status === 'downloading'
-					? `ETA: ${calculateEta(link.size, link.downloaded, link.speed)}`
-					: '';
 			const progressMessage =
 				`${link.status === 'completed' ? '✅ Download Completed:' : '📥 Downloading:'} ${displayName}\n` +
-				`\n${link.progressBar || ''}` +
+				`\n${link.progressBar}` +
 				`\n${link.status === 'downloading' ? `Speed: ${formatSpeed(link.speed)}` : ''}` +
-				`\n${link.status === 'completed' ? '' : remainingTime}` +
+				`\nETA: ${link.ETA}` +
 				`\nSize: ${link.status === 'completed' ? formatSize(link.size) : `${formatSize(link.downloaded)} / ${formatSize(link.size)}`}`;
 
 			// Only update if the message has changed
@@ -147,9 +140,9 @@ export const handleDownloadLinks = async (ctx: MyContext, links: string[]) => {
 		if (allCompleted && userDownloads.links.length === 0) {
 			clearInterval(progressInterval);
 			activeDownloads.delete(userId);
-			ctx.session = removeCompletedDownloads(ctx.session);
+			ctx.removeCompletedDownloads();
 			// Reset waiting state
-			ctx.session = resetWaitingForLink(ctx.session);
+			ctx.resetWaitingForLink();
 			await ctx.reply('All downloads completed successfully! 🎉');
 		}
 	}, UPDATE_INTERVAL);

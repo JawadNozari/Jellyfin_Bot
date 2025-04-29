@@ -20,3 +20,12 @@ export interface DownloadTask {
 	options?: Record<string, unknown>;
 	priority?: 'high' | 'normal' | 'low';
 }
+
+const FileAllocationModes = {
+	None: 'none',
+	Prealloc: 'prealloc',
+	Trunc: 'trunc',
+	Falloc: 'falloc',
+} as const;
+
+export type FileAllocationMode = (typeof FileAllocationModes)[keyof typeof FileAllocationModes];

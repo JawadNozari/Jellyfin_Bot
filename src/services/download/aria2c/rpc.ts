@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
+import type { FileAllocationMode } from '@/types/aria2c';
 
 const PORT = Number(process.env.RPC_PORT);
 if (!PORT) {
@@ -20,20 +21,27 @@ export class Aria2RPCProcess {
 	private readonly RPC_PORT;
 	private readonly RPC_SECRET;
 	private readonly DOWNLOAD_DIR: string;
-	private readonly SPILIT: number;
+	private readonly SPLIT: number;
 	private readonly TIMEOUT: number;
 	private readonly MAX_RETRIES: number;
 	private readonly RETRY_DELAY: number;
+	private readonly ALLOW_RETRY: boolean;
+	private readonly CONTINUE: boolean;
+	private readonly FILE_ALLOCATION: FileAllocationMode;
 	private readonly MAX_CONCURRENT_DOWNLOADS: number;
+
 	private process: ReturnType<typeof spawn> | null = null;
 	constructor() {
-		this.SPILIT = 5;
+		this.SPLIT = 5;
 		this.TIMEOUT = 30;
 		this.MAX_RETRIES = 4;
-		this.RETRY_DELAY = 3000;
-		this.MAX_CONCURRENT_DOWNLOADS = 4;
 		this.RPC_PORT = PORT;
+		this.RETRY_DELAY = 3000;
+		this.ALLOW_RETRY = true;
+		this.CONTINUE = true;
 		this.RPC_SECRET = SECRET;
+		this.FILE_ALLOCATION = 'none';
+		this.MAX_CONCURRENT_DOWNLOADS = 4;
 		this.DOWNLOAD_DIR =
 			DOWNLOAD_DIRECTORY ??
 			(() => {
@@ -57,14 +65,14 @@ export class Aria2RPCProcess {
 			`--rpc-secret=${this.RPC_SECRET}`,
 			'--dir',
 			this.DOWNLOAD_DIR,
-			`--split=${this.SPILIT}`,
-			'--allow-overwrite=true',
+			`--split=${this.SPLIT}`,
+			`--allow-overwrite=${this.ALLOW_RETRY}`,
 			`--timeout=${this.TIMEOUT}`,
-			'--max-tries=5',
-			'--continue=true',
+			`--max-tries=${this.MAX_RETRIES}`,
+			`--continue=${this.CONTINUE}`,
 			'--retry-wait=10',
 			'--connect-timeout=30',
-			'--file-allocation=none',
+			`--file-allocation=${this.FILE_ALLOCATION}`,
 			'--auto-file-renaming=false',
 			'--rpc-max-request-size=10M',
 			`--max-concurrent-downloads=${this.MAX_CONCURRENT_DOWNLOADS}`,
@@ -81,7 +89,7 @@ export class Aria2RPCProcess {
 
 		this.process.stdout?.on('data', (data) => {
 			const message = data.toString().trim();
-			if (message?.includes('RPC: listening on')) {
+			if (message?.includes(`IPv4 RPC: listening on TCP port ${this.RPC_PORT}`)) {
 				console.info('aria2c RPC server started successfully');
 				this.ready = true;
 			}

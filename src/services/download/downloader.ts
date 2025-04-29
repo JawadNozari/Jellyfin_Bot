@@ -1,11 +1,12 @@
-import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import type { DownloadLink } from '@/types';
-import { extractMediaInfo } from '@/utils/extractMediaInfo';
 import { Aria2Manager } from './aria2c';
+import type { DownloadLink } from '@/types';
 import { Aria2Client } from './aria2c/client';
-import { Aria2Polling } from './aria2c/polling';
 import { Aria2RPCProcess } from './aria2c/rpc';
+import { existsSync, mkdirSync } from 'node:fs';
+import { Aria2Polling } from './aria2c/polling';
+import { extractMediaInfo } from '@/utils/extractMediaInfo';
+import { createProgressBar } from '@/utils/progressbar';
 
 const PORT = Number(process.env.RPC_PORT);
 if (!PORT) {
@@ -48,13 +49,13 @@ export function validateLinks(links: string[]): DownloadLink[] {
 		if (!existsSync(downloadPath)) {
 			mkdirSync(downloadPath, { recursive: true });
 		}
-
+		const EmptyProgressBar = createProgressBar(0);
 		return {
 			url,
 			status: 'pending',
 			progress: 0,
-			progressBar: '',
-			ETA: '',
+			progressBar: EmptyProgressBar,
+			ETA: 'Calculating...',
 			remaining: 0,
 			speed: 0,
 			size: 0,

@@ -3,6 +3,7 @@ import { parseSize, parseSpeed } from '@/utils/parse';
 import { createProgressBar } from '@/utils/progressbar';
 import { Terminaloutput } from '@/utils/terminalOutput';
 import type { Aria2Client } from './client';
+import { calculateEta } from '@/utils/format';
 
 export class Aria2Polling {
 	private intervals = new Map<string, ReturnType<typeof setInterval>>();
@@ -25,10 +26,10 @@ export class Aria2Polling {
 				}
 
 				const {
-					completedLength = '0',
-					totalLength = '0',
-					downloadSpeed = '0',
-					status: ariaStatus = 'unknown',
+					completedLength = link.downloaded,
+					totalLength = link.size,
+					downloadSpeed = link.speed,
+					status: ariaStatus = link.status,
 					errorMessage = '',
 				} = response;
 
@@ -48,8 +49,11 @@ export class Aria2Polling {
 					link.size = parseSize(`${totalLength}B`);
 					link.downloaded = parseSize(`${completedLength}B`);
 					link.status = ariaStatus === 'active' ? 'downloading' : 'pending';
+					link.ETA = link.speed
+						? `${calculateEta(+totalLength, +completedLength, link.speed)}`
+						: 'Calculating...';
+					link.remaining = +totalLength - +completedLength;
 				}
-
 				link.progressBar = createProgressBar(link.progress);
 				this.terminalOutput.update();
 			} catch (err) {

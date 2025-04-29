@@ -55,17 +55,14 @@ export class Terminaloutput {
 		const progressColor = this.getProgressColor(link.progress);
 		const speedColor = this.getSpeedColor(link.speed);
 		const truncatedUrl = url.length > 50 ? `${url.substring(0, 47)}...` : url;
-
-		const remainingTime =
-			link.status === 'downloading'
-				? `  |  ETA: ${calculateEta(link.size, link.downloaded, link.speed)}`
-				: '';
-
 		return (
 			`${this.formatSeparator()}` +
 			`\n${COLORS.bold}${statusEmoji} ${this.getStatusDownload(link.status)}${COLORS.reset}` +
 			`\nURL: ${COLORS.gray}${truncatedUrl}${COLORS.reset}` +
-			`\n\n${link.progressBar || ''}  |  Speed: ${speedColor}${formatSpeed(link.speed)}${COLORS.reset}  |  Downloaded: ${progressColor}${formatSize(link.downloaded)}/${formatSize(link.size)}${COLORS.reset}${remainingTime}`
+			`\n\n${link.progressBar || ''}  |  ` +
+			`Speed: ${speedColor}${formatSpeed(link.speed)}${COLORS.reset}  |  ` +
+			`Downloaded: ${progressColor}${formatSize(link.downloaded)}/${formatSize(link.size)}${COLORS.reset}  |  ` +
+			`ETA: ${link.ETA}`
 		);
 	};
 	private readonly formatTerminalOutput = (): string => {
@@ -77,7 +74,7 @@ export class Terminaloutput {
 
 	// Status emojis
 	STATUS_EMOJIS = {
-		downloading: '⏬',
+		downloading: '⬇️',
 		completed: '✅',
 		failed: '❌',
 		pending: '⏳',

@@ -8,5 +8,9 @@ export interface SessionData {
 }
 
 export interface MyContext extends Context {
+    setWaitingForLink: () => void;
+    resetWaitingForLink: () => void;
+    addDownloads: (downloads: DownloadLink[]) => void;
+    removeCompletedDownloads: () => void;
 	session: SessionData;
 }
