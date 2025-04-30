@@ -114,7 +114,7 @@ export const handleDownloadLinks = async (ctx: MyContext, links: string[]) => {
 				`${link.status === 'completed' ? '✅ Download Completed:' : '📥 Downloading:'} ${displayName}\n` +
 				`\n${link.progressBar}` +
 				`\n${link.status === 'downloading' ? `Speed: ${formatSpeed(link.speed)}` : ''}` +
-				`\nETA: ${link.ETA}` +
+				`\n${link.status === 'completed' ? '' : `ETA: ${link.ETA}`}` +
 				`\nSize: ${link.status === 'completed' ? formatSize(link.size) : `${formatSize(link.downloaded)} / ${formatSize(link.size)}`}`;
 
 			// Only update if the message has changed
