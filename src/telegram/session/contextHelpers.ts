@@ -11,6 +11,12 @@ export function applySessionHelpers(ctx: MyContext) {
 	ctx.resetWaitingForLink = () => {
 		ctx.session = SessionManager.resetWaitingForLink(ctx.session);
 	};
+	ctx.setWaitingForCategory = () => {
+		ctx.session = SessionManager.setWaitingForCategory(ctx.session);
+	};
+	ctx.resetWaitingForCategory = () => {
+		ctx.session = SessionManager.resetWaitingForCategory(ctx.session);
+	};
 
 	ctx.addDownloads = (downloads: DownloadLink[]) => {
 		ctx.session = SessionManager.addActiveDownloads(ctx.session, downloads);

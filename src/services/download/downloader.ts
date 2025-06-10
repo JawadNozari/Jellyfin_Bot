@@ -40,11 +40,16 @@ export function validateLinks(links: string[]): DownloadLink[] {
 			downloadPath = join(
 				DOWNLOAD_DIR,
 				'Movies',
-				`${mediaInfo.movie.title}_${mediaInfo.movie.year}`,
+				`${(mediaInfo.movie.title).replace(' ', '_')}_${mediaInfo.movie.year}`,
 			);
 		} else if (mediaInfo.show) {
 			const season = mediaInfo.show.season.toString().padStart(2, '0');
-			downloadPath = join(DOWNLOAD_DIR, 'Shows', mediaInfo.show.title, `S${season}`);
+			downloadPath = join(
+				DOWNLOAD_DIR,
+				'Shows',
+				mediaInfo.show.title.replace(' ', '_'),
+				`S${season}`,
+			);
 		}
 		if (!existsSync(downloadPath)) {
 			mkdirSync(downloadPath, { recursive: true });

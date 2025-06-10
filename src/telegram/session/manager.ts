@@ -4,6 +4,7 @@ export namespace SessionManager {
 		return {
 			counter: 0,
 			waitingForLink: false,
+			waitingForCategory: false,
 			activeDownloads: [],
 		};
 	}
@@ -21,7 +22,19 @@ export namespace SessionManager {
 			waitingForLink: true,
 		};
 	}
+	export function resetWaitingForCategory(session: SessionData): SessionData {
+		return {
+			...session,
+			waitingForCategory: false,
+		};
+	}
 
+	export function setWaitingForCategory(session: SessionData): SessionData {
+		return {
+			...session,
+			waitingForCategory: true,
+		};
+	}
 	export function addActiveDownloads(session: SessionData, downloads: DownloadLink[]): SessionData {
 		return {
 			...session,
@@ -29,7 +42,10 @@ export namespace SessionManager {
 		};
 	}
 
-	export function queueActiveDownloads(session: SessionData, downloads: DownloadLink[]): SessionData {
+	export function queueActiveDownloads(
+		session: SessionData,
+		downloads: DownloadLink[],
+	): SessionData {
 		return {
 			...session,
 			activeDownloads: [

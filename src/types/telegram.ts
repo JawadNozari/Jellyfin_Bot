@@ -4,13 +4,16 @@ import type { DownloadLink } from './services';
 export interface SessionData {
 	counter: number;
 	waitingForLink: boolean;
+	waitingForCategory: boolean;
 	activeDownloads: DownloadLink[];
 }
 
 export interface MyContext extends Context {
-    setWaitingForLink: () => void;
-    resetWaitingForLink: () => void;
-    addDownloads: (downloads: DownloadLink[]) => void;
-    removeCompletedDownloads: () => void;
 	session: SessionData;
+	setWaitingForLink: () => void;
+	resetWaitingForLink: () => void;
+	setWaitingForCategory: () => void;
+	resetWaitingForCategory: () => void;
+	removeCompletedDownloads: () => void;
+	addDownloads: (downloads: DownloadLink[]) => void;
 }

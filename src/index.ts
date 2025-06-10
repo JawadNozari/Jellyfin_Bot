@@ -3,6 +3,8 @@ import {
 	handleDownloadLinks,
 	handleJellyfinStatus,
 	handleStorage,
+	handleMergeSubtitles,
+	handleCategorySelection,
 } from '@/telegram/handlers';
 import { mainKeyboard } from '@/telegram/keyboards/main';
 import { logger } from '@/telegram/middleware/logger';
@@ -28,9 +30,12 @@ bot.command('start', async (ctx) => {
 bot.hears('📥 Download', handleDownload);
 bot.hears('💾 Check Storage', handleStorage);
 bot.hears('🔍 Check Jellyfin Status', handleJellyfinStatus);
+bot.hears('💽 Merge Subtitles to Video', handleMergeSubtitles);
 
 bot.on('message', async (ctx) => {
 	if (ctx.session.waitingForLink) {
+		console.log('Received message while waiting for link:', ctx.message?.text);
+		console.log(ctx.session.waitingForLink);
 		// Extract links from the reply
 		const messageText = ctx.message?.text || '';
 		const links = messageText
@@ -46,6 +51,16 @@ bot.on('message', async (ctx) => {
 			);
 		}
 		return;
+	}
+	if (ctx.session.waitingForCategory) {
+		// Handle category selection for merging subtitles
+		const category = ctx.message?.text;
+		if (category) {
+			await handleCategorySelection(ctx, category);
+			ctx.session.waitingForCategory = false; // Reset the waiting state
+		} else {
+			await ctx.reply('Please select a valid category from the options provided.');
+		}
 	}
 	if (!ctx.session.waitingForLink) {
 		await ctx.reply('Please use the keyboard below!', {

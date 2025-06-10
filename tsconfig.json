@@ -1,9 +1,12 @@
 {
 	"compilerOptions": {
+		"resolveJsonModule": true,
 		"target": "ESNext",
 		"module": "ESNext",
 		"moduleResolution": "node",
-		"types": ["bun-types"],
+		"types": [
+			"bun-types"
+		],
 		"esModuleInterop": true,
 		"strict": true,
 		"skipLibCheck": true,
@@ -11,14 +14,30 @@
 		"outDir": "dist",
 		"baseUrl": ".",
 		"paths": {
-			"@/*": ["src/*"],
-			"@middleware/*": ["src/telegram/middleware/*"],
-			"@types/*": ["/types/*"],
-			"@utils/*": ["src/utils/*"],
-			"@services/*": ["src/services/*"],
-			"@telegram/*": ["src/telegram/*"]
+			"@/*": [
+				"src/*"
+			],
+			"@middleware/*": [
+				"src/telegram/middleware/*"
+			],
+			"@types/*": [
+				"/types/*"
+			],
+			"@utils/*": [
+				"src/utils/*"
+			],
+			"@services/*": [
+				"src/services/*"
+			],
+			"@telegram/*": [
+				"src/telegram/*"
+			]
 		}
 	},
-	"include": ["src/**/*"],
-	"exclude": ["node_modules"]
+	"include": [
+		"src/**/*"
+	],
+	"exclude": [
+		"node_modules"
+	]
 }

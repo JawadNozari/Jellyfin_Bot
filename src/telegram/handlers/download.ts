@@ -1,6 +1,6 @@
 import { processDownload, validateLinks } from '@/services';
 import type { DownloadLink, MyContext } from '@/types';
-import { calculateEta, formatSize, formatSpeed } from '@/utils/format';
+import { formatSize, formatSpeed } from '@/utils/format';
 
 // Track active downloads and their progress messages
 const activeDownloads = new Map<
@@ -11,7 +11,7 @@ const activeDownloads = new Map<
 	}
 >();
 
-const UPDATE_INTERVAL = 8000; // Update every 3.5 seconds
+const UPDATE_INTERVAL = 8000; // Update every 8 seconds
 
 export const handleDownload = async (ctx: MyContext) => {
 	ctx.setWaitingForLink();
@@ -134,15 +134,19 @@ export const handleDownloadLinks = async (ctx: MyContext, links: string[]) => {
 			if (link.status !== 'completed') {
 				allCompleted = false;
 			}
+			if (userDownloads.links.length === 0) {
+				console.log('No links left to process for this user. Download(s) completed.');
+				allCompleted = true; // If no links left, consider it completed
+			}
 		}
 
 		// Clear interval if all downloads are complete
-		if (allCompleted && userDownloads.links.length === 0) {
+		if (allCompleted) {
 			clearInterval(progressInterval);
 			activeDownloads.delete(userId);
-			ctx.removeCompletedDownloads();
+			await ctx.removeCompletedDownloads();
 			// Reset waiting state
-			ctx.resetWaitingForLink();
+			await ctx.resetWaitingForLink();
 			await ctx.reply('All downloads completed successfully! 🎉');
 		}
 	}, UPDATE_INTERVAL);
