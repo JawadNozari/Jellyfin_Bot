@@ -11,4 +11,4 @@ export const PENCIL = "\u001b[38;2;253;182;0m";
 export const YELLOW = "\u001b[33m";
 export const GREEN = "\u001b[32m";
 export const ORANGE = "\u001b[38;2;255;165;0m";
-export const GRAY = "\u001b[38;2;173;216;230m";
+export const SKY = "\u001b[38;2;173;216;230m";
