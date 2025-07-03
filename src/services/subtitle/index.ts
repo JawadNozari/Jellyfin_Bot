@@ -54,8 +54,9 @@ async function safeRename(oldPath: string, newPath: string): Promise<void> {
 async function processFolder(folderPath: string) {
 	const subLanguage = 'Persian';
 	const audioLanguage = 'English';
+	console.log(`${('-').repeat(100)}\n`);
+
 	console.log(`✅ Found Subtitle in: ${color.SKY}${folderPath}${color.RESET}`);
-	// Your logic here
 
 	const subtitleFiles = (await readdir(folderPath))
 		.filter((f) => path.extname(f) === '.srt' && !f.startsWith('._') && !f.startsWith('.'))

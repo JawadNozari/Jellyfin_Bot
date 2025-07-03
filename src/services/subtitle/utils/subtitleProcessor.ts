@@ -75,8 +75,7 @@ export class SubtitleProcessor {
 	}
 	async process() {
 		const videoBase = path.basename(this.videoPath);
-		console.log(`${('-').repeat(100)}\n`);
-
+		
 		const Converted = this.shouldConvert && (await this.convertSubToUtf8());
 		if (this.shouldConvert && !Converted) {
 			console.error('❌ Conversion failed. Skipping subtitle.');
@@ -123,7 +122,7 @@ export class SubtitleProcessor {
 	}
 
 	private async cleanAds(): Promise<boolean> {
-		console.log(`🧹 Removing Ads from ${color.GREEN}${this.subtitleLang}${color.RESET}`);
+		console.log(`🧹 Removing Ads from ${color.GREEN}${this.subtitleLang}${color.RESET} Subtitle`);
 		return await runCommand('subcleaner.py', [this.subtitlePath], 'pipe')
 			.then(() => {
 				verifySubtitle(this.subtitlePath);
@@ -247,7 +246,7 @@ export class SubtitleProcessor {
 			.map((track: { id: number }) => track.id);
 		if (subsToRemove.length === 0) {
 			console.log(
-				`✅  No duplicated subtitles for language ${color.LAVENDER}${languageName}${color.RESET}`,
+				`✅ No duplicated subtitles for language ${color.GREEN}${languageName}${color.RESET}`,
 			);
 			// return file_temp file even if no subtitles found
 			return;

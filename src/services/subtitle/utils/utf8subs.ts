@@ -30,12 +30,12 @@ export async function convertToUtf8(filePath: string): Promise<boolean> {
 		const fileName = basename(resolvedPath);
 
 		if (isUtf8) {
-			console.log(`✅ ${color.SKY}${fileName}${color.RESET} is already UTF-8`);
+			console.log('✅ Subtitle is already UTF-8');
 			return true;
 		}
 
 		console.log(
-			`🔄 Converting ${color.SKY}${fileName}${color.RESET} from ${color.PINK}${detectedEncoding}${color.RESET} to UTF-8...`,
+			`🔄 Converting Subtitle from ${color.PINK}${detectedEncoding}${color.RESET} to UTF-8...`,
 		);
 		const decoded = iconv.decode(fileBuffer, detectedEncoding);
 		const dirPath = dirname(resolvedPath);
@@ -54,7 +54,7 @@ export async function convertToUtf8(filePath: string): Promise<boolean> {
 				return false;
 			}
 
-			console.log(`✅ Successfully converted ${color.SKY}${fileName}${color.RESET} to UTF-8`);
+			console.log('✅ Successfully converted Subtitle to UTF-8');
 			return true;
 		} catch (verifyError) {
 			console.error(
