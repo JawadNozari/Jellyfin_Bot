@@ -31,7 +31,7 @@ export class AdjustFlags {
 	}
 
 	async getMKVmetadata(): Promise<MKVMetadata> {
-		const path = parse(this.videoPath).base;
+		const path = parse(this.videoPath);
 		const { stdout } = await execPromise(`mkvmerge -J ${path}`);
 		const patched = stdout.replace(/"uid"\s*:\s*(\d+)/g, `"uid": "$1"`); // Replace all "uid": 1234567890 with "uid": "1234567890" beacause of json 64bit limitations
 		const metadata = JSON.parse(patched);

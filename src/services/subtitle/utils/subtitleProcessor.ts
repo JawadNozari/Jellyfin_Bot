@@ -247,7 +247,7 @@ export class SubtitleProcessor {
 			.map((track: { id: number }) => track.id);
 		if (subsToRemove.length === 0) {
 			console.log(
-				`⚠️  File ${color.LAVENDER}${path.basename(inputPath)}${color.RESET} has No subtitles with language ${color.LAVENDER}${languageName}${color.RESET}`,
+				`✅  No duplicated subtitles for language ${color.LAVENDER}${languageName}${color.RESET}`,
 			);
 			// return file_temp file even if no subtitles found
 			return;
