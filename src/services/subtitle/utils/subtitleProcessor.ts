@@ -123,10 +123,11 @@ export class SubtitleProcessor {
 	}
 
 	private async cleanAds(): Promise<boolean> {
+		console.log(`🧹 Removing Ads from ${color.GREEN}${this.subtitleLang}${color.RESET}`);
 		return await runCommand('subcleaner.py', [this.subtitlePath], 'pipe')
 			.then(() => {
 				verifySubtitle(this.subtitlePath);
-				console.log('✅ Ads cleaned.');
+				console.log('✅ Ads Removed.');
 				return true;
 			})
 			.catch((err) => {
@@ -181,10 +182,6 @@ export class SubtitleProcessor {
 		const videoExt = path.extname(this.videoPath);
 		const videoBase = path.basename(this.videoPath, videoExt);
 		const subtitleTitle = title || language.toUpperCase();
-		console.log(
-			`📂 Video File: ${color.SKY}${path.basename(this.videoPath)}${color.RESET}\n` +
-				`📂 Sub File:   ${color.SKY}${path.basename(this.subtitlePath)}${color.RESET}`,
-		);
 		const tempOutput =
 			outputPath || path.join(path.dirname(this.videoPath), `${videoBase}_merged.mkv`); // Adjust this path if needed
 
