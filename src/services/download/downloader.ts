@@ -51,9 +51,13 @@ export function validateLinks(links: string[]): DownloadLink[] {
 				`S${season}`,
 			);
 		}
+		if (downloadPath.includes(' ')) {
+			downloadPath = downloadPath.replace(/ /g, '_');
+		}
 		if (!existsSync(downloadPath)) {
 			mkdirSync(downloadPath, { recursive: true });
 		}
+
 		const EmptyProgressBar = createProgressBar(0);
 		return {
 			url,

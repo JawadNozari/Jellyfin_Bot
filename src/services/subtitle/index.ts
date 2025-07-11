@@ -52,11 +52,7 @@ async function safeRename(oldPath: string, newPath: string): Promise<void> {
 }
 
 async function processFolder(folderPath: string) {
-	const subLanguage = 'Persian';
-	const audioLanguage = 'English';
-	console.log(`${('-').repeat(100)}\n`);
-
-	console.log(`✅ Found Subtitle in: ${color.SKY}${folderPath}${color.RESET}`);
+	//console.log(`✅ Found Subtitle in: ${color.SKY}${folderPath}${color.RESET}`);
 
 	const subtitleFiles = (await readdir(folderPath))
 		.filter((f) => path.extname(f) === '.srt' && !f.startsWith('._') && !f.startsWith('.'))
@@ -69,7 +65,6 @@ async function processFolder(folderPath: string) {
 				!f.startsWith('.'),
 		)
 		.sort((a, b) => a.localeCompare(b));
-
 	if (subtitleFiles.length === 0) {
 		// console.log('⚠️  No subtitles found in the specified directory.');
 		return;
@@ -123,7 +118,14 @@ async function processFolder(folderPath: string) {
 				// continue;
 			}
 		}
+		const subLanguage = 'Persian';
+		const audioLanguage = 'English';
 
+		console.log(`\n${('-').repeat(100)}\n`);
+		console.log(`Subtitle: ${color.SKY}${sub}${color.RESET}`);
+		console.log(`Video:    ${color.SKY}${match}${color.RESET}\n`);
+		console.log(`Preferred Subtitle Language: ${color.GREEN}${subLanguage}${color.RESET}`);
+		console.log(`Preferred Audio Language:    ${color.GREEN}${audioLanguage}${color.RESET}\n`);
 		// Continue with your SubtitleProcessor
 		const processor = new SubtitleProcessor({
 			videoPath: videoPath,
@@ -166,6 +168,6 @@ export async function searchAndProcessFolders(
 }
 
 // Call it on a root folder
-searchAndProcessFolders('/Volumes/SSD/Jellyfin/Media/Horror', processFolder)
-	.then(() => console.log('✅ Search complete.'))
+searchAndProcessFolders('/Volumes/SSD/Jellyfin/Media', processFolder)
+	.then(() => console.log('\n\n✅ Search completed.\n\n'))
 	.catch(console.error);

@@ -68,9 +68,7 @@ export class AdjustFlags {
 			const isForcedTrack = track.properties.forced_track === true;
 
 			if (isDefaultTrack && isForcedTrack) {
-				console.log(
-					`✅ Flags for track ${color.PINK}${trackUId}${color.RESET} are correctly set as default & forced.`,
-				);
+				console.log('✅ Flags are correctly set!');
 				return true;
 			}
 			console.log(`⚠️ Flags for track ${trackUId} are not correctly set.`);
@@ -160,7 +158,7 @@ export class AdjustFlags {
 				const nameContainsForced =
 					sub.properties.track_name?.toLowerCase().includes('forced') ?? false;
 				if (!MatchedLang && (isForced || isDefault || nameContainsForced)) {
-					console.log(`⭕️ RESETING ${FLN} from default & forced Subtitle`);
+					console.log(`✅ RESETING ${FLN} from default & forced Subtitle`);
 					await this.resetTrackFlags(sub.properties.uid);
 				}
 				if (MatchedLang) {
