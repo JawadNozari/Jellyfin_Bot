@@ -1,4 +1,4 @@
-import fs from 'node:fs';
+import fs, { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import * as color from './consoleColors';
@@ -9,6 +9,11 @@ import { execFile } from 'node:child_process';
 import { verifySubtitle } from './verifySubtitle';
 import { unlink, rename } from 'node:fs/promises';
 import { type LanguageCode, getLanguageCodeFromName, getLanguageCodes } from './languageCodes';
+import { parseSRT } from '../cleaner/parser';
+import { cleanSubtitle } from '../cleaner/cleaner';
+import { toSRT } from '../cleaner/formatter';
+import { loadRules } from '../cleaner/loadRules';
+import { validate } from '../cleaner/validator';
 
 const exec = promisify(execFile);
 type SubtitleProcessorOptions = {
@@ -75,7 +80,7 @@ export class SubtitleProcessor {
 	}
 	async process() {
 		const videoBase = path.basename(this.videoPath);
-		
+
 		const Converted = this.shouldConvert && (await this.convertSubToUtf8());
 		if (this.shouldConvert && !Converted) {
 			console.error('❌ Conversion failed. Skipping subtitle.');
@@ -123,16 +128,24 @@ export class SubtitleProcessor {
 
 	private async cleanAds(): Promise<boolean> {
 		console.log(`🧹 Removing Ads from ${color.GREEN}${this.subtitleLang}${color.RESET} Subtitle`);
-		return await runCommand('subcleaner.py', [this.subtitlePath], 'pipe')
-			.then(() => {
-				verifySubtitle(this.subtitlePath);
-				console.log('✅ Ads Removed.');
-				return true;
-			})
-			.catch((err) => {
-				console.error('❌ Ad cleaning failed:', err);
-				return false;
-			});
+		const srt = readFileSync(this.subtitlePath, 'utf-8');
+
+		const parsed = parseSRT(srt);
+		const errors = validate(parsed);
+
+		if (errors.length > 0) {
+			console.error('\n‼️ Validation errors:', errors);
+				console.error('❌ Ad cleaning failed!');
+			return false;
+		} 
+			console.log('\n✅ Subtitle file is valid.\n');
+
+			const rules = loadRules(['general', 'persian']);
+			const cleaned = cleanSubtitle(parsed, rules, true);
+			const output = toSRT(cleaned);
+			writeFileSync(this.subtitlePath, output);
+			console.log(`\n✅ Cleaned subtitle written to ${this.subtitlePath}`);
+			return true;
 	}
 
 	private async syncWithVideo(): Promise<boolean> {
