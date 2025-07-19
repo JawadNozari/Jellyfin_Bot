@@ -4,10 +4,19 @@ import { unlink } from 'node:fs/promises';
 import * as color from './utils/consoleColors';
 import { SubtitleProcessor } from './utils/subtitleProcessor';
 import { readdir, readFile, writeFile } from 'node:fs/promises';
-
+import { scanPersianSubtitlesOnly, printSummary } from './scanner';
+import { findFilesMissingPersianSubtitles } from './scanner/findFilesMissingSubtitle';
+//  import { SubsourceApi } from './providers/subsourceAPI';
 const Regex_Shows = /^(?<title>.*?)S(?<season>\d{1,2})E(?<episode>\d{2,3}|\d)/i;
 const Regex_Movies = /^(?<title>.+?)(?:\.|_)(?<year>(?:19|20)\d{2})/i;
 
+// const api = new SubsourceApi();
+// const response = await api.searchMovie("tt1375666"); // Inception
+// if (api.responseStatusOk(response)) {
+// 	console.log("✅ Movie search success:", response.data);
+// } else {
+// 	console.log("❌ Failed to fetch movie");
+// }
 function extractMeta(filename: string) {
 	const showMatch = filename.match(Regex_Shows);
 	if (showMatch?.groups) {
@@ -50,6 +59,9 @@ async function safeRename(oldPath: string, newPath: string): Promise<void> {
 		throw new Error(`Safe rename failed: ${error}`);
 	}
 }
+
+// const results = scanPersianSubtitlesOnly('/Volumes/SSD/Jellyfin/Media/');
+// printSummary(results);
 
 async function processFolder(folderPath: string) {
 	//console.log(`✅ Found Subtitle in: ${color.SKY}${folderPath}${color.RESET}`);
@@ -168,6 +180,17 @@ export async function searchAndProcessFolders(
 }
 
 // Call it on a root folder
-searchAndProcessFolders('/Volumes/SSD/Jellyfin/Media', processFolder)
+await searchAndProcessFolders('/Volumes/SSD/Jellyfin/Media', processFolder)
 	.then(() => console.log('\n\n✅ Search completed.\n\n'))
 	.catch(console.error);
+
+	
+const missing = findFilesMissingPersianSubtitles('/Volumes/SSD/Jellyfin/Media/');
+if (missing.length) {
+	for (const f of missing) {
+		console.log('❌  ', f);
+	}
+	console.log(`\n📂 ${missing.length} file(s) missing Persian subtitles:\n`);
+} else {
+	console.log('✅ All files contain Persian subtitles!');
+}
