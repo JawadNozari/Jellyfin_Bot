@@ -1,7 +1,7 @@
 import { readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-const isVideoFile = (file: string) => file.endsWith('.mkv');
+const isVideoFile = (file: string) => file.endsWith('.mkv') || file.endsWith('.mp4');
 
 export function findAllMkvFiles(dir: string): string[] {
 	let results: string[] = [];

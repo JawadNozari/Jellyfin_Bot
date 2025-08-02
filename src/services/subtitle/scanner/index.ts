@@ -12,7 +12,8 @@ interface SubtitleInfo {
 	subtitleTracks: SubtitleTrack[];
 }
 
-const isVideoFile = (file: string) => file.endsWith('.mkv');
+const isVideoFile = (file: string) =>
+	file.endsWith('.mkv') || file.endsWith('.mp4') || file.endsWith('.avi');
 
 function findAllMkvFiles(dir: string): string[] {
 	let results: string[] = [];

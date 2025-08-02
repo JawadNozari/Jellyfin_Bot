@@ -12,13 +12,12 @@ const errors = validate(parsed);
 
 if (errors.length > 0) {
 	console.error('\n‼️ Validation errors:', errors);
-} else {
-	console.log('\n✅ Subtitle file is valid.\n');
-
-	const rules = loadRules(['general', 'persian']);
-	const cleaned = cleanSubtitle(parsed, rules, true);
-	const output = toSRT(cleaned);
-	writeFileSync('example.srt', output);
-
-	console.log('\n✅ Cleaned subtitle written to subtitle.cleaned.srt');
 }
+console.log('\n✅ Subtitle file is valid.\n');
+
+const rules = loadRules(['general', 'persian']);
+const cleaned = cleanSubtitle(parsed, rules, true);
+const output = toSRT(cleaned);
+writeFileSync('example.srt', output);
+
+console.log('\n✅ Cleaned subtitle written to subtitle.cleaned.srt');

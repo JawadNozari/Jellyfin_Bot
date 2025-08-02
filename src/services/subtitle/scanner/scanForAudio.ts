@@ -5,21 +5,21 @@ interface SubtitleTrack {
 	codec: string;
 }
 
-export function getSubtitleTracks(file: string): SubtitleTrack[] {
+export function getAudioTracks(file: string): SubtitleTrack[] {
 	try {
 		const output = execSync(`mkvmerge -J "${file}"`, { encoding: 'utf-8' });
 		const json = JSON.parse(output);
 
-		const subs = json.tracks
+		const audioTracks = json.tracks
 			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-			.filter((track: any) => track.type === 'subtitles')
+			.filter((track: any) => track.type === 'audio')
 			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			.map((track: any) => ({
 				language: track.properties.language ?? 'und',
 				codec: track.codec,
 			}));
 
-		return subs;
+		return audioTracks;
 	} catch (err) {
 		console.error(`❌ Unable to read: ${file}`);
 		return [];

@@ -6,6 +6,9 @@ import { SubtitleProcessor } from './utils/subtitleProcessor';
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { scanPersianSubtitlesOnly, printSummary } from './scanner';
 import { findFilesMissingPersianSubtitles } from './scanner/findFilesMissingSubtitle';
+
+import { getIMDbIdFromFilename } from './providers/imdb-lookup';
+import { downloadMissingSubs } from './providers/downloadMissingSubs';
 //  import { SubsourceApi } from './providers/subsourceAPI';
 const Regex_Shows = /^(?<title>.*?)S(?<season>\d{1,2})E(?<episode>\d{2,3}|\d)/i;
 const Regex_Movies = /^(?<title>.+?)(?:\.|_)(?<year>(?:19|20)\d{2})/i;
@@ -60,8 +63,8 @@ async function safeRename(oldPath: string, newPath: string): Promise<void> {
 	}
 }
 
-// const results = scanPersianSubtitlesOnly('/Volumes/SSD/Jellyfin/Media/');
-// printSummary(results);
+//  const results = scanPersianSubtitlesOnly('/Volumes/SSD/Jellyfin/Media/');
+//  printSummary(results);
 
 async function processFolder(folderPath: string) {
 	//console.log(`✅ Found Subtitle in: ${color.SKY}${folderPath}${color.RESET}`);
@@ -179,18 +182,27 @@ export async function searchAndProcessFolders(
 	}
 }
 
-// Call it on a root folder
-await searchAndProcessFolders('/Volumes/SSD/Jellyfin/Media', processFolder)
-	.then(() => console.log('\n\n✅ Search completed.\n\n'))
-	.catch(console.error);
+// // Call it on a root folder
+// await searchAndProcessFolders('/Volumes/SSD/Jellyfin/Media', processFolder)
+// 	.then(() => console.log('\n\n✅ Search completed.\n\n'))
+// 	.catch(console.error);
 
-	
-const missing = findFilesMissingPersianSubtitles('/Volumes/SSD/Jellyfin/Media/');
+const missing = findFilesMissingPersianSubtitles('/Volumes/SSD/Jellyfin/Media/Movies');
 if (missing.length) {
-	for (const f of missing) {
-		console.log('❌  ', f);
-	}
 	console.log(`\n📂 ${missing.length} file(s) missing Persian subtitles:\n`);
+	for (const file of missing) {
+		console.log('❌', file);
+		downloadMissingSubs(file)
+			.then((result) => {
+				setTimeout(() => {
+					console.log(`\n\n✅ Downloaded subtitles for: ${result}`);
+				}, 3000);
+			})
+			.catch((error) => {
+				console.error('Error extracting IMDb info:', error);
+			});
+	}
+	console.log('\n\n');
 } else {
-	console.log('✅ All files contain Persian subtitles!');
+	console.log('\n\n✅ All files contain Persian subtitles!');
 }
